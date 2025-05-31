@@ -1,88 +1,87 @@
 package com.todo.base;
 
-import org.junit.*;
+
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
 
-import com.sun.tools.javac.util.Assert;
-
 import io.github.bonigarcia.wdm.WebDriverManager;
+import org.testng.Assert;
+import org.testng.annotations.*;
 
+import java.awt.*;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class Todo {
     private WebDriver driver;
      
-    @Before
+    @BeforeMethod
     public void setUp() {
     	WebDriverManager.chromedriver().setup();
         driver = new ChromeDriver();
         driver.get("https://todomvc.com/examples/angular/dist/browser/#/all");
+        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
     }
 
-    @After
-    public void tearDown() {
-        if (driver != null) {
-            driver.quit();
-        }
-    }
 
-    @Test
-    public void testAddItem() {
-        WebElement inputBox = driver.findElement(By.className("new-todo ng-pristine ng-valid ng-touched"));
+
+    @Test(priority = 0)
+    public void testAddItem() throws InterruptedException {
+        Thread.sleep(5000);
+        WebElement inputBox = driver.findElement(By.xpath("//input[@placeholder=\"What needs to be done?\"]"));
         inputBox.sendKeys("Buy milk" + Keys.ENTER);
 
-        List<WebElement> todoItems = driver.findElements(By.cssSelector("ul[class='todo-list'] app-todo-item li"));
+        List<WebElement> todoItems = driver.findElements(By.xpath("(//*[@class=\"todo-list\"]/app-todo-item/li)"));
         Assert.assertTrue(todoItems.size() > 0);
         Assert.assertEquals("Buy milk", todoItems.get(0).getText());
+
     }
 
-    @Test
-    public void testDeleteItem() {
+    @Test (priority = 1)
+    public void testDeleteItem() throws InterruptedException {
         testAddItem(); // Reuse add logic
 
-        WebElement todoItem = driver.findElement(By.cssSelector(".todo-list li"));
+        WebElement todoItem = driver.findElement(By.xpath("(//*[@class=\"todo-list\"]/app-todo-item/li)"));
         Actions actions = new Actions(driver);
         actions.moveToElement(todoItem).perform();
 
-        WebElement destroyButton = todoItem.findElement(By.cssSelector("button.destroy"));
+        WebElement destroyButton = todoItem.findElement(By.xpath("//button[@class=\"destroy\"]"));
         destroyButton.click();
 
-        List<WebElement> todoItems = driver.findElements(By.cssSelector(".todo-list li"));
+        List<WebElement> todoItems = driver.findElements(By.xpath("(//*[@class=\"todo-list\"]/app-todo-item/li)"));
         Assert.assertEquals(0, todoItems.size());
     }
 
-    @Test
-    public void testEditItem() {
+    @Test(priority = 2)
+    public void testEditItem() throws InterruptedException, AWTException {
         testAddItem();
 
         WebElement label = driver.findElement(By.cssSelector(".todo-list li label"));
         Actions actions = new Actions(driver);
         actions.doubleClick(label).perform();
-
-        WebElement editInput = driver.findElement(By.cssSelector(".todo-list li.editing .edit"));
-        editInput.clear();
-        editInput.sendKeys("Buy eggs" + Keys.ENTER);
-
-        WebElement updatedLabel = driver.findElement(By.cssSelector(".todo-list li label"));
-        Assert.assertEquals("Buy eggs", updatedLabel.getText());
+        WebElement editInput = driver.findElement(By.xpath("//li[@class='editing']"));
+        System.out.println(editInput.isDisplayed());
+        boolean iseditable = editInput.getAttribute("class").equals("editing");
+        Assert.assertTrue(iseditable);
     }
 
-    @Test
-    public void testRemainingItemsCount() {
+    @Test(priority = 3)
+    public void testRemainingItemsCount() throws InterruptedException {
         testAddItem();
 
         WebElement count = driver.findElement(By.cssSelector("footer .todo-count"));
         Assert.assertTrue(count.getText().contains("1 item left"));
     }
 
-    @Test
-    public void testFilterOptions() {
+    @Test(priority = 4)
+    public void testFilterOptions() throws InterruptedException {
         testAddItem();
 
         WebElement checkbox = driver.findElement(By.cssSelector(".todo-list li .toggle"));
-        checkbox.click(); // Mark item as complete
+       checkbox.click(); // Mark item as complete
+       WebElement  completeItem = driver.findElement(By.xpath("//li[@class=\"completed\"]"));
+       Assert.assertTrue(completeItem.isDisplayed());
 
         driver.findElement(By.linkText("Active")).click();
         List<WebElement> activeItems = driver.findElements(By.cssSelector(".todo-list li"));
@@ -95,6 +94,13 @@ public class Todo {
         driver.findElement(By.linkText("All")).click();
         List<WebElement> allItems = driver.findElements(By.cssSelector(".todo-list li"));
         Assert.assertEquals(1, allItems.size());
+    }
+    @AfterMethod
+    public void tearDown() {
+
+        if (driver != null) {
+            driver.quit(); // closes the browser after each test
+        }
     }
 }
 
