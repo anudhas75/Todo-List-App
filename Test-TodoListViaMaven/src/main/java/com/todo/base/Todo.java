@@ -6,12 +6,15 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
+import org.openqa.selenium.interactions.KeyInput;
 import org.testng.Assert;
 import org.testng.annotations.*;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 
 public class Todo {
     private WebDriver driver;
@@ -53,6 +56,7 @@ public class Todo {
         Assert.assertEquals(0, todoItems.size());
     }
 
+
     @Test(priority = 2)
     public void testEditItem() throws InterruptedException, AWTException {
         testAddItem();
@@ -64,6 +68,18 @@ public class Todo {
         System.out.println(editInput.isDisplayed());
         boolean iseditable = editInput.getAttribute("class").equals("editing");
         Assert.assertTrue(iseditable);
+        WebElement inputfiled = driver.findElement(By.xpath("//div[@class=\"input-container\"]"));
+        System.out.println(inputfiled.isDisplayed());
+        actions.click(inputfiled)
+                .keyDown(Keys.CONTROL)
+                .sendKeys("a").keyDown(Keys.CONTROL).sendKeys(Keys.DELETE).sendKeys("Helloooo").sendKeys(Keys.ENTER).build().perform();
+        Robot rb = new Robot();
+        rb.keyPress(KeyEvent.VK_U);
+        rb.keyPress(KeyEvent.VK_I);
+        rb.keyPress(KeyEvent.VK_ENTER);
+        rb.keyRelease(KeyEvent.VK_ENTER);
+        Thread.sleep(10000);
+        System.out.println("look");
     }
 
     @Test(priority = 3)
@@ -80,8 +96,15 @@ public class Todo {
 
         WebElement checkbox = driver.findElement(By.cssSelector(".todo-list li .toggle"));
        checkbox.click(); // Mark item as complete
-       WebElement  completeItem = driver.findElement(By.xpath("//li[@class=\"completed\"]"));
-       Assert.assertTrue(completeItem.isDisplayed());
+       WebElement  completeItemcheckbox = driver.findElement(By.xpath("//li[@class=\"completed\"]"));
+       Assert.assertTrue(completeItemcheckbox.isDisplayed());
+
+        WebElement  completeItemtext = driver.findElement(By.xpath("//*[@class=\"todo-list\"]/app-todo-item/li/div/label"));
+        System.out.println("isdisplayed: "+completeItemtext.isDisplayed());
+        Assert.assertTrue(completeItemtext.isDisplayed());
+        System.out.println(completeItemtext.getCssValue("text-decoration"));
+        String cssstyle =completeItemtext.getCssValue("text-decoration");
+        Assert.assertTrue(cssstyle.contains("line-through"));
 
         driver.findElement(By.linkText("Active")).click();
         List<WebElement> activeItems = driver.findElements(By.cssSelector(".todo-list li"));
